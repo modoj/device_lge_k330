@@ -1,0 +1,21 @@
+on fs
+    # wait /dev/block/bootdevice/by-name/system
+    # mount ext4 /dev/block/bootdevice/by-name/system /system ro noatime barrier=1
+    # wait /dev/block/bootdevice/by-name/userdata
+    # mount ext4 /dev/block/bootdevice/by-name/userdata /data nosuid nodev noatime barrier=1 noauto_da_alloc errors=continue
+    start dumpling
+
+on early-boot
+    chcon -R /data/property u:object_r:system_data_file:s0
+    chcon -R /data/security u:object_r:system_data_file:s0
+    start chcon_keystore
+
+service chcon_keystore /sbin/sh /system/etc/init.recovery.m1_chcon_keystore.sh
+    disabled
+    oneshot
+    seclabel u:r:keystore:s0
+
+service dumpling /sbin/sh /sbin/postrecoveryboot.sh
+    class main
+    user root
+    oneshot
